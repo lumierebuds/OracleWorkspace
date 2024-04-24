@@ -225,3 +225,83 @@ WHERE HIRE_DATE BETWEEN '90/01/01' AND '03/01/01';
 SELECT * 
 FROM EMPLOYEE
 WHERE HIRE_DATE NOT BETWEEN '90/01/01' AND '03/01/01';
+
+
+/*
+    <LIKE '특정패턴'>
+    비교하고자 하는 컬럼값이 내가 지정한 특정 패턴에 만족될 경우 조회.
+    
+    비교대상칼럼명  LIKE '특정패턴' 
+    
+    - 옵션 : 특정패턴 부분에 와일드 카드인 '%', '_'를 가지고 제시할 수 있음. 
+    '%' : 0글자 이상
+          비교대상컬럼명 LIKE '문자%'  => 컬럼값 중에 '문자'로 시작하는 모든 값을 조회
+          비교대상컬럼명 LIKE '%문자'  => 컬럼값 중 '문자'로 끝나는 모든 값을 조회 
+          비교대상컬럼명 LIKE '%문자%' => 컬럼값 중 '문자'가 포함되는것을 조회
+    '_' : 1글자
+          비교대상컬럼명 LIKE '_문자'  => 해당 컬럼값 중 '문자'앞에 무조건 1글자가 존재하는 경우 조회. 
+          비고대상컬럼명 LIKE '__문자' => 해당 컬럼값 중 '문자'앞에 무조건 2글자가 존재하는 경우 조회.
+
+*/
+
+-- 성이 전씨인 사람들의 이름, 급여,입사일조회.
+SELECT EMP_NAME, SALARY, HIRE_DATE
+FROM EMPLOYEE
+WHERE EMP_NAME LIKE '전%';
+
+-- 이름중에 '하'가 포함된 사원들의 이름, 주민번호, 부서 코드
+SELECT EMP_NAME, EMP_NO, DEPT_CODE
+FROM EMPLOYEE
+WHERE EMP_NAME LIKE '%하%';
+
+-- 전화번호 4번째자리가 9로시작하는 사원들의 사번, 사원명, 전화번호, 이메일 조회
+SELECT EMP_NO, EMP_NAME,PHONE, EMAIL
+FROM EMPLOYEE
+WHERE PHONE LIKE '___9%';
+
+-- 이메일 번호중 네번째 문자위치에 _가 있는 사원을 찾으려면? 
+SELECT EMP_NO, EMP_NAME,PHONE, EMAIL
+FROM EMPLOYEE
+WHERE EMAIL LIKE '___\_%' ESCAPE '\'; 
+-- 오라클에선 이스케이프 문자 통해 특수기호를 사용할 수있다.
+-- 이때 이스케이프 문자를 ESCAPE 로 지정해줄 수 있다.
+-- (디폴트 이스케이프 문자가 존재하지 않는다.)
+
+
+-- 실습문제 
+
+-- 1. 이름이 연으로 끝나는 사원들의 이름, 입사일 조회
+SELECT EMP_NAME, HIRE_DATE
+FROM EMPLOYEE
+WHERE EMP_NAME LIKE '%연';
+
+-- 2. 전화번호 처음 3글자가 010이 아닌 사원들의 이름, 전화번호 조회
+SELECT EMP_NAME, PHONE
+FROM EMPLOYEE
+WHERE PHONE NOT LIKE '010%';
+
+-- 3. Department 테이블에서 해외영업과 관련된 부서들의 모든 칼럼 조회 
+SELECT *
+FROM DEPARTMENT
+WHERE DEPT_TITLE LIKE '해외영업%';
+
+/*
+    <IS NULL>
+    해당 값이 NULL인지 비교해주는 연산자 
+    
+    [표현법] 
+    비교대상칼럼 IS NULL : 컬럼값이 NULL일 경우 참
+    비교대상칼럼 IS NOT NULL : 컬럼값이 NULL이 아닐 경우 참. 
+*/
+
+-- 보너스를 받지 않는 사원들(== BONUS 컬럼값이 NULL인)의 사번, 이름, 보너스 
+SELECT EMP_ID, EMP_NAME, BONUS
+FROM EMPLOYEE
+WHERE BONUS IS NULL;
+
+-- 사수가 없는 사원들의 사원명, 사수사번, 부서코드 조회 
+SELECT EMP_NAME, MANAGER_ID, DEPT_CODE
+FROM EMPLOYEE
+WHERE MANAGER_ID IS NULL; 
+
+
