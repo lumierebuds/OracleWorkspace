@@ -62,19 +62,19 @@ FROM EMPLOYEE;
 -- EMPLOYEE 테이블로부터 직원명, 입사일, 근무일수(퇴사일(오늘날짜) - 입사일) 조회 
 -- DATE 타입끼리 산술연산 가능. (DATE => 년, 월, 일, 시, 분, 초)
 -- 오늘날짜 : SYSDATE 
--- 시, 분, 초단위로 연산을 수행한 후 "일"을 반환해주기 때문에 소숫점이 더럽다. 
+-- 시, 분, 초단위로 연산을 수행한 후 '일'을 반환해주기 때문에 소숫점이 더럽다. 
 SELECT EMP_NAME, HIRE_DATE, SYSDATE - HIRE_DATE
 FROM EMPLOYEE;
 
 /*
     <컬럼명에 별칭 부여하기> 
     [표현법] 
-    컬럼명 AS 별칭, 컬럼명 AS "별칭", 컬럼명 "별칭", 컬럼명 별칭 
+    컬럼명 AS 별칭, 컬럼명 AS '별칭', 컬럼명 '별칭', 컬럼명 별칭 
     (AS가 없어도 된다.) 
 */ 
 
-SELECT EMP_NAME AS 사원명, HIRE_DATE "입사일", SYSDATE - HIRE_DATE AS "근무일수",
-(SALARY + SALARY * BONUS) * 12 "보너스가 포함된 연봉" /*DBMS는 공백문자가 존재하면 쌍따옴표로 추가해준다.*/
+SELECT EMP_NAME AS 사원명, HIRE_DATE '입사일', SYSDATE - HIRE_DATE AS '근무일수',
+(SALARY + SALARY * BONUS) * 12 '보너스가 포함된 연봉' /*DBMS는 공백문자가 존재하면 쌍따옴표로 추가해준다.*/
 FROM EMPLOYEE;
 
 
@@ -85,7 +85,7 @@ FROM EMPLOYEE;
   
 */
 -- EMPLOYEE 테이블로부터 사번, 사원명, 급여, 급여단위(원)을 조회 
-SELECT EMP_ID, EMP_NAME, SALARY, '원' AS "급여단위(원)" 
+SELECT EMP_ID, EMP_NAME, SALARY, '원' AS '급여단위(원)' 
 FROM EMPLOYEE;
 
 
@@ -169,7 +169,7 @@ FROM EMPLOYEE
 WHERE ENT_YN = 'N';
 
 -- 4. EMPLOYEE 테이블에서 연봉이(보너스미포함) 5000만원 이상인 사람들의 이름, 급여, 연봉, 입사일을 조회 
-SELECT EMP_NAME , SALARY, SALARY * 12 AS "연봉" , HIRE_DATE 
+SELECT EMP_NAME , SALARY, SALARY * 12 AS '연봉' , HIRE_DATE 
 FROM EMPLOYEE
 --WHERE 연봉 >= 50000000; -- SELECT의 실행순서가 마지막이므로 조건식에서는 사용할 수 없는 값이다. 
 WHERE SALARY * 12 >= 50000000; 
@@ -302,6 +302,121 @@ WHERE BONUS IS NULL;
 -- 사수가 없는 사원들의 사원명, 사수사번, 부서코드 조회 
 SELECT EMP_NAME, MANAGER_ID, DEPT_CODE
 FROM EMPLOYEE
-WHERE MANAGER_ID IS NULL; 
+WHERE MANAGER_ID IS NULL;
+
+/*
+    <IN> 
+    비교 대상 컬럼 값에 내가 제시한 목록들중 일치하는 값이 있는지 판단하고자 할때 사용 
+    
+    [표현법]
+    비교대상칼럼 IN (값1, 값2, 값3, ...) 
+    -- OR 연산자를 여러개 엮어서 쓰는것과 같다고 보면된다.  
+    
+
+*/
+
+-- 부서코드가 D6이거나 D8이거나 D5인 사원의 이름, 부서코드, 급여를 조회 
+SELECT EMP_NAME, DEPT_CODE, SALARY
+FROM EMPLOYEE
+WHERE DEPT_CODE IN ('D6','D8','D5');
+
+/* OR 조건으로 검색한 결과와 같다. 
+SELECT EMP_NAME, DEPT_CODE, SALARY
+FROM EMPLOYEE
+WHERE DEPT_CODE = 'D6' OR  DEPT_CODE = 'D8' OR DEPT_CODE = 'D5';
+*/ 
+
+-- 직급코드가 J1도 아니고, J3도 아니고, J4 도 아닌 사원들의 모든 칼럼 조회
+SELECT *
+FROM EMPLOYEE
+WHERE JOB_CODE NOT IN ('J1', 'J3', 'J4' );
+
+/*
+    <연결연산자 || >
+    여러 칼럼값들을 하나의 컬럼인것 처럼 연결시켜주는 연산자
+    컬럼값 + 리터럴값으로 연결도 가능하다. 
+    
+*/
+-- 사원 이름, 주민등록번호, 급여를 하나의 문자열로 이어서 '연결됨' 이라는 칼럼명으로 조회 
+SELECT EMP_NAME || EMP_NO || SALARY AS '연결됨'
+FROM EMPLOYEE;
+
+-- XX번 XXX의 월급은 XXXX원 입니다. 
+-- 칼럼명 급여정보 
+SELECT EMP_NO || '번 ' || EMP_NAME || '의 월급은' || SALARY ||'원 입니다.' AS 급여정보
+FROM EMPLOYEE;
 
 
+/*
+    <연산자 우선순위>
+    1. () 
+    2. 산술연산자
+    3. 연결연산자(||)
+    4. 비교연산자
+    5. IS NULL, LIKE, IN 
+    6. BETWEEN AND
+    7. NOT 
+    8. AND 
+    9. OR
+*/
+
+
+/*
+    <ORDER BY 절> 
+    SELECT 문 가장 마지막에 기입하는 구문이면서 가장 마지막에 실행되는 구문 
+    최종 조회된 결과물들에 대해서 정렬 기준을 세워주는 구문. 
+    
+    [표현법] 
+    SELECT 조회할 칼럼1, 칼럼2, ...
+    FROM 조회할 테이블명 
+    WHERE 조건식 
+    ORDER BY (정렬기준으로 세우고자하는 칼럼명/별칭/컬럼순번) [ASC/DESC] [NULLS FIRST/NULLS LAST]
+    -- 대괄호 안의 내용은 생략 가능
+    -- 괄호 안의 내용은 생략 불가
+    
+    오름차순 / 내림차순 
+    - ASC : 오름차순 (기본값) 
+    - DESC : 내림차순 
+    
+    정렬하고자하는 칼럼에 NULL값이 있을경우 
+    - NULLS FIRST : NULL값들을 맨 앞으로 배치하겠다.
+    - NULLS LAST : NULL값들을 맨 뒤로 배치하겠다.
+    
+    
+*/ 
+
+-- 월급이 높은 사람들부터 모든 칼럼을 나열하고 싶음 
+SELECT * 
+FROM EMPLOYEE
+ORDER BY SALARY DESC;
+
+-- 월급이 낮은 사람들부터 모든 칼럼을 나열하고 싶음
+SELECT * 
+FROM EMPLOYEE
+ORDER BY SALARY ASC; -- ASC 생략 가능 
+
+-- BONUS 기준 정렬 - 낮은 보너스부터 높은 보너스 까지 
+SELECT * 
+FROM EMPLOYEE
+ORDER BY BONUS ASC; -- 오름차순정렬은 NULLS LAST 기본값 
+
+-- BONUS 기준 정렬 - 높은 보너스부터 낮은 보너스 까지 
+SELECT * 
+FROM EMPLOYEE
+ORDER BY BONUS DESC; -- 내림차순정렬은 NULLS FIRST 기본값
+
+
+-- 추가적인 정렬조건 제시하기 (정렬조건으로 세운 앖의 값이 동일한 경우 사용)
+SELECT * 
+FROM EMPLOYEE
+ORDER BY BONUS DESC, SALARY DESC; -- 컴마로 정렬조건을 추가해줄 수 있다
+
+
+
+-- 연봉 기준 정렬
+SELECT EMP_NAME, SALARY, SALARY * 12 연봉 
+FROM EMPLOYEE
+-- WHERE 연봉 < 500000000 -- WHERE 절이 시작될땐 연봉 결과가 없다. 
+-- ORDER BY 연봉 DESC; 
+-- ORDER BY 3 DESC;  -- 3번째 칼럼값을 기준으로 내림차순 정렬
+ORDER BY SALARY * 12 DESC;
