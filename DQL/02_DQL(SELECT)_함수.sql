@@ -857,7 +857,7 @@ ORDER BY EMP_ID ASC;
     
     [표현법] 
     LAG/LEAD(가져올 칼럼, 가져올 행번호, 행이 없는 경우 기본값) OVER ([PARTITION BY 칼럼] ORDER BY 칼럼)
-    
+
     
 */
 
@@ -889,9 +889,11 @@ FROM EMPLOYEE;
     단, 가져올 데이터가 없는 경우 0원으로 표시하며 소그룹내에서는 사원번호 기준으로 오름차순 정렬 
 */
 
+-- LAG에 NVL 을 이용한 방법 
 SELECT EMP_ID, EMP_NAME, JOB_CODE, SALARY, NVL(LAG(SALARY) OVER (PARTITION BY JOB_CODE ORDER BY EMP_ID ASC), 0)
 FROM EMPLOYEE;
 
+-- LAG 함수를 활용한 방법 
 SELECT EMP_ID, EMP_NAME, JOB_CODE, SALARY, LAG(SALARY,1,0) OVER (PARTITION BY JOB_CODE ORDER BY EMP_ID ASC)
 FROM EMPLOYEE;
 
