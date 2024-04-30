@@ -15,8 +15,8 @@
 SELECT DEPT_CODE, SUM(SALARY) --4
 FROM EMPLOYEE -- 1
 WHERE 1 = 1 -- 2
-GROUP BY DEPT_CODE --3
-ORDER BY 1; --5
+GROUP BY DEPT_CODE -- 3
+ORDER BY 1; -- 5
 
 -- 'D1' 부서의 총 급여합
 SELECT SUM(SALARY) 
@@ -109,7 +109,6 @@ GROUP BY DEPT_CODE;
     <HAVING 절> 
     - 그룹에 대한 조건을 제시할때 사용되는 구문
     - GROUP BY절과 함께 사용함. 그룹화된 데이터를 기준으로만 조건을 제시할 수 있음.
-
 */
 
 SELECT DEPT_CODE,
@@ -128,6 +127,17 @@ SELECT JOB_CODE,
 FROM EMPLOYEE
 GROUP BY JOB_CODE
 HAVING AVG(SALARY) >= 3000000;
+
+/*
+        <SELECT 문 구조 및 실행순서>
+        5. SELECT 
+        1. FROM : 조회하고자 하는 테이블 / 가상테이블(DUAL) / VIEW 
+        2. WHERE : 조건식(단, 그룹함수는 사용불가)  
+        3. GROUP BY : 그룹화시킬 칼럼명/함수식
+        4. HAVING : 그룹함수식에 대한 조건식(그룹화가 완료된 이후에 수행) 
+        6. ORDER BY : 정렬기준. (항상 마지막에 실행) 
+
+*/
 
 
 /*
@@ -148,7 +158,7 @@ HAVING AVG(SALARY) >= 3000000;
 -- 부서코드가 D5이거나, 급여가 300만원 초과인 사람들을 조회 
 SELECT EMP_ID, EMP_NAME, DEPT_CODE, SALARY
 FROM EMPLOYEE
-WHERE SALARY > 3000000 OR DEPT_CODE = 'D5'; -- 8명 
+WHERE SALARY > 3000000 OR DEPT_CODE = 'D5'; -- 12명
 
 SELECT EMP_ID, EMP_NAME, DEPT_CODE, SALARY
 FROM EMPLOYEE
@@ -226,18 +236,19 @@ WHERE DEPT_CODE = 'D1'; -- 3명
 SELECT DEPT_CODE, JOB_CODE, SUM(SALARY)
 FROM EMPLOYEE
 GROUP BY DEPT_CODE, JOB_CODE -- DEPT_CODE별로 그룹화를 하고, JOB_CODE별로 다시 소그룹화 시킨것. 
-ORDER BY DEPT_CODE; 
-UNION
+UNION ALL
 -- 직급별 급여 총합 
-SELECT JOB_CODE, SUM(SALARY)
+SELECT DEPT_CODE , NULL , SUM(SALARY)
 FROM EMPLOYEE
-GROUP BY JOB_CODE
-ORDER BY JOB_CODE;
+GROUP BY DEPT_CODE
+UNION ALL
+SELECT NULL , NULL , SUM(SALARY)
+FROM EMPLOYEE;
 
 -- ROLEUP 함수  -- 통계용 보고서 작성으로 가끔사용된다고 함. 
 SELECT DEPT_CODE, JOB_CODE, SUM(SALARY)
 FROM EMPLOYEE
-GROUP BY ROLLUP(DEPT_CODE, JOB_CODE) -- ROLLUP이라는 함수를 사용하면 기본값 + 컬럼 1번에 대한 총 집계까지 함께 반환
+GROUP BY ROLLUP (JOB_CODE , DEPT_CODE) -- ROLLUP이라는 함수를 사용하면 기본값 + 컬럼 1번에 대한 총 집계까지 함께 반환
 ORDER BY DEPT_CODE; 
 
 SELECT JOB_CODE, SUM(SALARY)
@@ -245,22 +256,19 @@ FROM EMPLOYEE
 GROUP BY JOB_CODE
 ORDER BY JOB_CODE; 
 
-
 -----------------------------------------------
 SELECT DEPT_CODE, JOB_CODE, SUM(SALARY)
 FROM EMPLOYEE
 GROUP BY DEPT_CODE, JOB_CODE
-ORDER BY DEPT_CODE -- 1번 쿼리문 : 부서별 급여합계  
 UNION ALL
-SELECT DEPT_CODE, NULL AS JOB_CODE, SUM(SALARY) 
+SELECT NULL ,  JOB_CODE, SUM(SALARY) 
 FROM EMPLOYEE
-GROUP BY JOB_CODE
-ORDER BY JOB_CODE; -- 2번 쿼리문 : 직급별 급여합계 
+GROUP BY JOB_CODE -- 2번 쿼리문 : 직급별 급여합계 
 UNION ALL
-SELECT NULL, NULL, SUM(SALARY) -- 3번 쿼리문 : 
+SELECT NULL, NULL, SUM(SALARY) -- 3번 쿼리문 : 전체 합계  
 FROM EMPLOYEE;
 
--- CUBE(모든 조합별 통계를 구함)
+-- CUBE(모든 조합별 통계를 구함) 
 SELECT DEPT_CODE, JOB_CODE, SUM(SALARY)
 FROM EMPLOYEE
 GROUP BY CUBE(DEPT_CODE, JOB_CODE) 
