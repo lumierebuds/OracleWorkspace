@@ -244,8 +244,203 @@ WHERE EMP_NAME = '하이유';
 SELECT EMP_NAME, DEPT_CODE, JOB_CODE, HIRE_DATE
 FROM EMPLOYEE
 JOIN JOB USING(JOB_CODE)
+WHERE DEPT_CODE = 'D5' AND JOB_CODE= 'J5';
+
+-- 3) 다중열 서브쿼리를 조건으로 주는 문법
+SELECT EMP_NAME, DEPT_CODE, JOB_CODE, HIRE_DATE
+FROM EMPLOYEE
+JOIN JOB USING(JOB_CODE)
 WHERE (DEPT_CODE, JOB_CODE) IN (
             SELECT DEPT_CODE, JOB_CODE
             FROM EMPLOYEE
             WHERE EMP_NAME = '하이유'
     );
+    
+
+-- 박나라 사원과 같은 직급코드이면서 같은 사수사번을 가진 사원들의 사번, 이름, 직급코드, 사수사번 조회(다중열 서브쿼리 작성) 
+SELECT EMP_ID, EMP_NAME, JOB_CODE, MANAGER_ID
+FROM EMPLOYEE
+WHERE (JOB_CODE, MANAGER_ID) = (
+        SELECT JOB_CODE, MANAGER_ID 
+        FROM EMPLOYEE
+        WHERE EMP_NAME = '박나라'
+    ) AND EMP_NAME != '박나라';
+
+
+/*
+    
+    4. 다중행 다중열 서브쿼리 
+    서브쿼리 조회결과가 여러행 여러칼럼일 경우 
+    
+*/
+
+-- 각 직급별로 최소 급여를 받는 사원들 조회 (사번, 이름, 직급코드, 급여) 
+
+-- 1) 직급별 최소 급여
+SELECT JOB_CODE,MIN(SALARY) 
+FROM EMPLOYEE
+GROUP BY JOB_CODE;
+
+-- 2) 사원들을 조회 
+SELECT EMP_ID, EMP_NAME, JOB_CODE, SALARY
+FROM EMPLOYEE;
+/*
+WHERE (JOB_CODE, SALARY) = ('J1',8000000) OR 
+    (JOB_CODE, SALARY) = ('J2',3700000)
+    ...
+    (JOB_CODE, SALARY) IN ( ('J1',8000000), ('J2',3700000))
+*/
+
+-- 3) 다중행 다중열 서브쿼리를 사용 
+SELECT EMP_ID, EMP_NAME, JOB_CODE, SALARY 
+FROM EMPLOYEE
+WHERE (JOB_CODE, SALARY) IN (
+    SELECT JOB_CODE, MIN(SALARY) 
+    FROM EMPLOYEE
+    GROUP BY JOB_CODE
+    );
+
+-- 각 부서별 최고급여를 받는사원을 조회, 부서가 없을 경우 NULL값이 아닌 '부서없음' 으로 조회되게끔 하시오
+-- (사번, 이름, 부서코드, 급여) 
+
+SELECT EMP_ID, EMP_NAME, NVL(DEPT_CODE, '부서없음'), SALARY
+FROM EMPLOYEE
+WHERE (NVL(DEPT_CODE, '부서없음'), SALARY) IN (
+    SELECT NVL(DEPT_CODE, '부서없음') , MAX(SALARY)
+    FROM EMPLOYEE
+    GROUP BY DEPT_CODE);
+
+--------------------------------------------
+
+/*
+
+    5. 스칼라 서브쿼리 
+    - 단일행(단일열) 서브쿼리의 일종으로 SELECT절에서 사용되는 서브쿼리를 지칭함.
+      SELECT절이 실행 될때마다 서브쿼리문이 실행되면서 조회 결과값을 반환.
+    - 현재 조회된 행의 "칼럼값"을 서브쿼리 내에서 사용가능함.
+    - 매행마다 실행되기 때문에 대규모 데이터처리시 효율이 좋지 못함.
+
+*/
+
+-- 직원번호, 직원명, 부서명을 조회 
+SELECT 
+    EMP_ID,
+    EMP_NAME,
+    DEPT_TITLE
+FROM EMPLOYEE
+JOIN DEPARTMENT ON (DEPT_CODE = DEPT_ID);
+-- 스칼라 서브쿼리는 현재 조회된 행의 칼럼값을 서브쿼리 내에서 사용이 가능하여 
+-- EMPLOYEE 테이블의 DEPT_CODE 칼럼값을 사용한다. 
+SELECT EMP_ID,
+       EMP_NAME, 
+       (SELECT DEPT_TITLE FROM DEPARTMENT WHERE DEPT_ID = DEPT_CODE) AS DEPT_TITLE
+FROM EMPLOYEE;
+-- WHERE '인사관리부' = (SELECT DEPT_TITLE FROM DEPARTMENT WHERE DEPT_ID = DEPT_CODE);
+
+-- 사번, 사원명, 부서코드, 직급명조회
+SELECT 
+        EMP_ID,
+        EMP_NAME, 
+        DEPT_CODE,
+        (SELECT JOB_NAME FROM JOB J WHERE E.JOB_CODE = J.JOB_CODE)
+FROM EMPLOYEE E;
+    
+-- LOCATION 테이블에서 지역코드와, 국가명(스칼라 서브쿼리 활용) 조회하기 
+SELECT  LOCAL_CODE, 
+        (SELECT NATIONAL_NAME FROM NATIONAL N WHERE L.NATIONAL_CODE = N.NATIONAL_CODE) AS NATIONAL_NAME
+FROM LOCATION L;
+
+
+/*
+    6. 인라인 뷰 
+    - FROM절에서 사용되는 서브쿼리 
+    
+    서브쿼리를 수행한 결과(RESULT SET)을 테이블 대신 사용. 파생 테이블
+    
+*/
+
+-- 보너스 포함 연봉이 3000만원 이상인 사원들의 사번, 이름, 보너스포함연봉, 부서코드조회 
+SELECT EMP_ID,
+       EMP_NAME,
+       (SALARY + SALARY * NVL(BONUS,0)) *  12 "보너스 포함 연봉",
+       DEPT_CODE
+FROM EMPLOYEE 
+WHERE (SALARY + SALARY * NVL(BONUS, 0)) * 12 >= 30000000;
+
+
+SELECT *
+FROM (SELECT EMP_ID,
+       EMP_NAME,
+       (SALARY + SALARY * NVL(BONUS,0)) *  12 "보너스 포함 연봉",
+       DEPT_CODE
+       FROM EMPLOYEE)
+-- WHERE (SALARY + SALARY * NVL(BONUS, 0WHERE "보너스 포함 연봉" >= 30000000;
+WHERE "보너스 포함 연봉" >= 30000000;
+-- RESULT SET 내부에 "보너스 포함 연봉" 이 존재해서 조건식으로 사용할 수 있다. )) * 12 >= 30000000;
+
+-- 인라인뷰를 많이 사용하는 예 
+-- TOP-N분석 : 데이터베이스 상에 있는 자료들중 최상위 N개의 자료를 보기 위한 기능
+
+-- 전 직원중 급여가 가장 높은 상위 5명을 조회(순위, 사원명, 급여)
+SELECT  ROW_NUMBER() OVER (ORDER BY SALARY DESC) 순위, 
+        EMP_NAME, 
+        SALARY
+FROM EMPLOYEE;
+
+SELECT * 
+FROM (SELECT  ROW_NUMBER() OVER (ORDER BY SALARY DESC) 순위, 
+        EMP_NAME, 
+        SALARY
+    FROM EMPLOYEE)
+WHERE 순위 <= 5;
+
+
+-- * ROWNUM : 오라클에서 제공해주는 컬럼, 조회된 순서대로 1부터 순번을 부여해주는 컬럼
+SELECT EMP_NAME, SALARY, ROWNUM
+FROM EMPLOYEE;
+-- WHERE ROWNUM <= 5;
+-- ORDER BY SALARY DESC; 순서가 뒤엉키게 된다. 
+
+-- 1) ORDER BY로 테이블을 먼저 정렬한 후, 
+-- 2) ROWNUM 순번을 통해 급여가 높은 5명만 추출
+SELECT EMP_NAME, SALARY, ROWNUM 
+FROM (
+    SELECT *
+    FROM EMPLOYEE
+    ORDER BY SALARY DESC
+    )
+WHERE ROWNUM <= 5; 
+
+-- 2중 중첩 인라인뷰로 5등, 10등을 조회
+SELECT * 
+FROM (SELECT EMP_NAME, SALARY, ROWNUM AS R
+    FROM (
+        SELECT *
+        FROM EMPLOYEE
+        ORDER BY SALARY DESC
+        )
+)
+WHERE R > =5 AND R <=10;
+
+-----------------------------------------------
+-- 각 부서별 평균급여가 높은 3개의 부서의 부서코드, 평균급여 조회
+SELECT DEPT_CODE 부서코드, 평균급여, ROWNUM 순위
+FROM (SELECT DEPT_CODE, ROUND(AVG(SALARY)) AS 평균급여
+        FROM EMPLOYEE
+        GROUP BY DEPT_CODE
+        ORDER BY 2 DESC)
+WHERE ROWNUM <=3;
+
+SELECT *
+FROM 
+(SELECT DEPT_CODE, ROUND(AVG(SALARY)) 
+        FROM EMPLOYEE
+        GROUP BY DEPT_CODE
+        ORDER BY 2 DESC)
+WHERE ROWNUM <= 3;
+
+
+
+
+
+
