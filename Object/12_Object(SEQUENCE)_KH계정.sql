@@ -122,3 +122,4 @@ VALUES (SEQ_EMP_EID.NEXTVAL, '고길동' , '123456-1234567', 'J1','S1');
 SELECT * FROM EMPLOYEE;
 
 -- 시퀀스는 INSERT문의 PK값에 데이터를 추가할때 가장 많이 사용된다.
+
